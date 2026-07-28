@@ -87,13 +87,13 @@ def distill(session: Session, llm: LLMFn | None = None) -> SkillDraft:
 
     # Offline fallback: honest outline, clearly marked as needing review.
     name = _slug(goal)
-    desc = f"Use this skill when the task resembles: {goal[:110]}"
+    desc = "Use this skill when the task resembles " + goal[:110].replace(":", " -")
     steps = "\n".join(
         f"{i + 1}. `{ev.tool}` — {ev.text[:100]}" for i, ev in enumerate(session.tool_sequence[:25])
     )
     content = f"""---
 name: {name}
-description: {desc}
+description: "{desc}"
 ---
 
 # {name.replace("-", " ").title()}

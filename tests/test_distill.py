@@ -37,3 +37,14 @@ def test_emit_and_dedup(tmp_path, good_session):
         pass
     sims = find_similar(draft, tmp_path / "skills")
     assert sims and sims[0].similarity >= 0.55
+
+
+def test_offline_frontmatter_is_valid_yaml(good_session):
+    import re
+
+    import yaml
+
+    draft = distill(parse_session(good_session), llm=None)
+    m = re.search(r"^---\s*\n(.*?)\n---", draft.content, re.DOTALL)
+    meta = yaml.safe_load(m.group(1))
+    assert meta["name"] and meta["description"].startswith("Use this skill when")
