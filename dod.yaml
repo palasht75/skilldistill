@@ -1,0 +1,12 @@
+# skilldistill's definition of done — verified by dunnit (pip install dunnit)
+version: 1
+checks:
+  - name: tests
+    run: python3 -m pytest -q
+  - name: lint
+    run: python3 -m ruff check src tests
+protected:
+  - dod.yaml
+  - .github/**
+tamper: true
+stubs: true

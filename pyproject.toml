@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skilldistill"
+version = "0.1.0"
+description = "Turn successful AI agent sessions into reusable agent skills. Distill Claude Code transcripts into SKILL.md playbooks with evals-ready drafts."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Palash", email = "palasht75@gmail.com" }]
+keywords = ["ai-agents", "skills", "skill-md", "claude-code", "cursor", "distillation", "agent-skills"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Code Generators",
+    "Typing :: Typed",
+]
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+openai = ["openai>=1.50"]
+dev = ["pytest>=7.0", "ruff", "dunnit>=0.2.0"]
+
+[project.scripts]
+skilldistill = "skilldistill.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/palasht75/skilldistill"
+Issues = "https://github.com/palasht75/skilldistill/issues"
+Changelog = "https://github.com/palasht75/skilldistill/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skilldistill"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["EXE002"]
