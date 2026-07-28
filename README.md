@@ -2,7 +2,8 @@
 
 **Turn selected agent trajectories into reusable, reviewable skill candidates.**
 
-[![PyPI](https://img.shields.io/pypi/v/skilldistill)](https://pypi.org/project/skilldistill/)
+[![PyPI version](https://img.shields.io/pypi/v/skilldistill?cacheSeconds=300)](https://pypi.org/project/skilldistill/)
+[![Latest release](https://img.shields.io/badge/release-v0.2.0-blue)](https://github.com/palasht75/skilldistill/releases/tag/v0.2.0)
 [![CI](https://github.com/palasht75/skilldistill/actions/workflows/ci.yml/badge.svg)](https://github.com/palasht75/skilldistill/actions)
 [![Python](https://img.shields.io/pypi/pyversions/skilldistill)](https://pypi.org/project/skilldistill/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
