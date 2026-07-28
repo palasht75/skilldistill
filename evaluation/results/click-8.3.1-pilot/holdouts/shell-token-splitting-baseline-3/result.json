@@ -1,0 +1,62 @@
+{
+  "agent": {
+    "codex_version": "codex-cli 0.146.0-alpha.3.1",
+    "exit_code": 0,
+    "reasoning_effort": "medium",
+    "requested_model": "gpt-5.4-mini",
+    "returned_model": null,
+    "timed_out": false
+  },
+  "candidate_sha256": "2ff87394f9ec91a4d15f56d1b4c21a4601eec33d5768bd6df1f7cd1af5fb412e",
+  "condition": "baseline",
+  "duration_ms": 42744,
+  "replicate": 3,
+  "role": "negative_control",
+  "run_id": "shell-token-splitting-baseline-3",
+  "schedule_sha256": "79d6153909f4510d528621b74ba26cec77fe6841ea0d60480a141ea2570e22f8",
+  "schema_version": 1,
+  "study_config_sha256": "31fc92b3a6e765f37454122f836253f4273fb2f62f545581d4867cdf5b1601fd",
+  "task_id": "shell-token-splitting",
+  "trace": {
+    "completed_tool_count": 9,
+    "eligibility_reasons": [],
+    "eligible": true,
+    "goal": "Click shell-completion argument splitting no longer preserves the expected token boundaries. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+    "model": null,
+    "requested_model": "gpt-5.4-mini",
+    "returned_model": null,
+    "schema_version": 1,
+    "source": "codex",
+    "successful_terminal": true,
+    "truncated": false,
+    "turn_count": 1,
+    "usage": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 97536,
+      "fresh_input_tokens": 19269,
+      "input_tokens": 116805,
+      "output_tokens": 1500,
+      "reasoning_tokens": null,
+      "total_tokens": null
+    }
+  },
+  "verified_success": true,
+  "verifier": {
+    "changed_files": [
+      "src/click/shell_completion.py"
+    ],
+    "focused": {
+      "duration_ms": 2175,
+      "returncode": 0,
+      "timed_out": false
+    },
+    "passed": true,
+    "patch_sha256": "b13e063bed1300c8439fd1430c4efe8c0a951bbb550c5c1102d44f3cc3002311",
+    "shared": {
+      "duration_ms": 2380,
+      "returncode": 0,
+      "timed_out": false
+    },
+    "unexpected_files": []
+  }
+}

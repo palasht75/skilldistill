@@ -1,0 +1,114 @@
+{
+  "candidate_generation": {
+    "cached_tokens": 20480,
+    "calls": 4,
+    "duration_ms": 85183,
+    "fresh_input_tokens": 30375,
+    "input_tokens": 50855,
+    "output_tokens": 5259
+  },
+  "candidate_sha256": "2ff87394f9ec91a4d15f56d1b4c21a4601eec33d5768bd6df1f7cd1af5fb412e",
+  "decision": {
+    "efficiency_claim_supported": false,
+    "evidence_of_improvement": false,
+    "negative_control_no_regression": true,
+    "net_new_task_success": false,
+    "reported_token_reduction_at_least_10_percent": false,
+    "success_noninferior": true,
+    "universal_claim_supported": false
+  },
+  "schema_version": 1,
+  "tasks": {
+    "nested-context-normalization": {
+      "baseline": {
+        "cached_tokens": 342528,
+        "duration_ms": 137826,
+        "fresh_input_tokens": 56495,
+        "input_tokens": 399023,
+        "median_duration_ms": 44861,
+        "median_fresh_input_tokens": 18488,
+        "median_output_tokens": 1851,
+        "output_tokens": 5757,
+        "reasoning_tokens": null,
+        "reported_tokens": 404780,
+        "reported_tokens_per_verified_success": 134926.66666666666,
+        "runs": 3,
+        "tool_calls": 32,
+        "turns": 3,
+        "verified_successes": 3
+      },
+      "candidate": {
+        "cached_tokens": 408192,
+        "duration_ms": 168431,
+        "fresh_input_tokens": 53341,
+        "input_tokens": 461533,
+        "median_duration_ms": 54482,
+        "median_fresh_input_tokens": 17039,
+        "median_output_tokens": 2398,
+        "output_tokens": 7108,
+        "reasoning_tokens": null,
+        "reported_tokens": 468641,
+        "reported_tokens_per_verified_success": 156213.66666666666,
+        "runs": 3,
+        "tool_calls": 33,
+        "turns": 3,
+        "verified_successes": 3
+      }
+    },
+    "shell-token-splitting": {
+      "baseline": {
+        "cached_tokens": 317696,
+        "duration_ms": 122541,
+        "fresh_input_tokens": 63734,
+        "input_tokens": 381430,
+        "median_duration_ms": 42744,
+        "median_fresh_input_tokens": 19269,
+        "median_output_tokens": 1500,
+        "output_tokens": 4271,
+        "reasoning_tokens": null,
+        "reported_tokens": 385701,
+        "reported_tokens_per_verified_success": 128567.0,
+        "runs": 3,
+        "tool_calls": 26,
+        "turns": 3,
+        "verified_successes": 3
+      },
+      "candidate": {
+        "cached_tokens": 330496,
+        "duration_ms": 136022,
+        "fresh_input_tokens": 58330,
+        "input_tokens": 388826,
+        "median_duration_ms": 50054,
+        "median_fresh_input_tokens": 19420,
+        "median_output_tokens": 1384,
+        "output_tokens": 4420,
+        "reasoning_tokens": null,
+        "reported_tokens": 393246,
+        "reported_tokens_per_verified_success": 131082.0,
+        "runs": 3,
+        "tool_calls": 24,
+        "turns": 3,
+        "verified_successes": 3
+      }
+    }
+  },
+  "validity": {
+    "negative_control_trigger_specificity_established": false,
+    "post_holdout_findings": [
+      {
+        "id": "candidate-trigger-scope-too-broad",
+        "impact": "The negative-control pass counts remain valid execution outcomes, but they do not establish that automatic trigger selection would correctly avoid the unrelated task.",
+        "next_protocol": "Use a semantic trigger-scope gate and a new candidate, seed, task split, and holdouts. Do not tune against or reuse this holdout set.",
+        "severity": "protocol-limitation",
+        "summary": "The frozen candidate describes any localized behavior regression, rather than limiting its trigger to normalization behavior."
+      },
+      {
+        "id": "holdout-binding-metadata-backfilled",
+        "impact": "The hashes were backfilled from the candidate and schedule that were already frozen before execution; patches, verifier outcomes, usage, and timing were not changed.",
+        "next_protocol": "The harness now writes these bindings with each run, validates them before resume or aggregation, and refuses candidate regeneration in a used artifact root.",
+        "severity": "metadata-correction",
+        "summary": "The initial holdout records omitted per-run candidate, schedule, and study hash bindings."
+      }
+    ]
+  }
+}

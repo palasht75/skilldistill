@@ -1,0 +1,223 @@
+{
+  "completed_tool_count": 13,
+  "eligibility_reasons": [],
+  "eligible": true,
+  "events": [
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "I’m checking the normalization path first, then I’ll trace the smallest production change that restores click choice value normalization without touching tests or docs.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc 'pwd && rg -n \"choice normalization|normalize|click choice|case-sensitivity|case sensitivity|case_sensitivity|context\" src tests -S'",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "<local-path>\ntests/test_arguments.py:274:    ctx = click.Context(click.Command(\"\"))\ntests/test_arguments.py:508:    @click.pass_context\ntests/test_custom_classes.py:4:def test_command_context_class():\ntests/test_custom_classes.py:5:    \"\"\"A command with a custom ``context_class`` should produce a\ntests/test_custom_classes.py:6:    context using that type.\ntests/test_custom_classes.py:9:    class CustomContext(click.Context):\ntests/test_custom_classes.py:13:        context_class = CustomContext\ntests/test_custom_classes.py:16:    context = command.make_context(\"test\", [])\ntests/test_custom_classes.py:17:    assert isinstance(context, CustomContext)\ntests/test_custom_classes.py:20:def test_context_invoke_type(runner):\ntests/test_custom_classes.py:21:    \"\"\"A command invoked from a custom context should have a new\ntests/test_custom_classes.py:22:    context with the same type.\ntests/test_custom_classes.py:25:    class CustomContext(click.Context):\ntests/test_custom_classes.py:29:        context_class = CustomContext\ntests/test_custom_classes.py:33:    @click.pass_context\ntests/test_custom_classes.py:35:        assert isinstance(ctx, CustomContext)\ntests/test_custom_classes.py:39:    @click.pass_context\ntests/test_custom_classes.py:41:        assert isinstance(ctx, CustomContext)\ntests/test_custom_classes.py:47:def test_context_formatter_class():\ntests/test_custom_classes.py:48:    \"\"\"A context with a custom ``formatter_class`` should format help\ntests/test_custom_classes.py:57:    class CustomContext(click.Context):\ntests/test_custom_classes.py:60:    context = CustomContext(\ntests/test_custom_classes.py:63:    assert \"\\x1b[33mOptions\\x1b[0m:\" in context.get_help()\ntests/test_commands.py:10:    @click.pass_context\ntests/test_commands.py:34:    @click.pass_context\ntests/test_commands.py:49:    @click.pass_context\ntests/test_commands.py:56:    @click.pass_context\ntests/test_commands.py:215:        @click.pass_context\ntests/test_commands.py:222:        @click.pass_context",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "I found the normalization code paths in `src/click/types.py` and the parser’s token normalization in `src/click/parser.py`. Next I’m narrowing to the choice-value path and the exact failing expectation in `tests/test_normalization.py`.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '220,360p' src/click/types.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '1,220p' src/click/parser.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '1,220p' tests/test_normalization.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "import click\n\nCONTEXT_SETTINGS = dict(token_normalize_func=lambda x: x.lower())\n\n\ndef test_option_normalization(runner):\n    @click.command(context_settings=CONTEXT_SETTINGS)\n    @click.option(\"--foo\")\n    @click.option(\"-x\")\n    def cli(foo, x):\n        click.echo(foo)\n        click.echo(x)\n\n    result = runner.invoke(cli, [\"--FOO\", \"42\", \"-X\", 23])\n    assert result.output == \"42\\n23\\n\"\n\n\ndef test_choice_normalization(runner):\n    @click.command(context_settings=CONTEXT_SETTINGS)\n    @click.option(\n        \"--method\",\n        type=click.Choice(\n            [\"SCREAMING_SNAKE_CASE\", \"snake_case\", \"PascalCase\", \"kebab-case\"],\n            case_sensitive=False,\n        ),\n    )\n    def cli(method):\n        click.echo(method)\n\n    result = runner.invoke(cli, [\"--METHOD=snake_case\"])\n    assert not result.exception, result.output\n    assert result.output == \"snake_case\\n\"\n\n    # Even though it's case sensitive, the choice's original value is preserved\n    result = runner.invoke(cli, [\"--method=pascalcase\"])\n    assert not result.exception, result.output\n    assert result.output == \"PascalCase\\n\"\n\n    result = runner.invoke(cli, [\"--method=meh\"])\n    assert result.exit_code == 2\n    assert (\n        \"Invalid value for '--method': 'meh' is not one of \"\n        \"'screaming_snake_case', 'snake_case', 'pascalcase', 'kebab-case'.\"\n    ) in result.output\n\n    result = runner.invoke(cli, [\"--help\"])\n    assert (\n        \"--method [screaming_snake_case|snake_case|pascalcase|kebab-case]\"\n        in result.output\n    )\n\n\ndef test_command_normalization(runner):\n    @click.group(context_settings=CONTEXT_SETTINGS)\n    def cli():\n        pass\n\n    @cli.command()\n    def foo():\n        click.echo(\"here!\")\n\n    result = runner.invoke(cli, [\"FOO\"])\n    assert result.output == \"here!\\n\"\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "                    try:\n                        value = value.decode(fs_enc)\n                    except UnicodeError:\n                        value = value.decode(\"utf-8\", \"replace\")\n                else:\n                    value = value.decode(\"utf-8\", \"replace\")\n            return value\n        return str(value)\n\n    def __repr__(self) -> str:\n        return \"STRING\"\n\n\nclass Choice(ParamType, t.Generic[ParamTypeValue]):\n    \"\"\"The choice type allows a value to be checked against a fixed set\n    of supported values.\n\n    You may pass any iterable value which will be converted to a tuple\n    and thus will only be iterated once.\n\n    The resulting value will always be one of the originally passed choices.\n    See :meth:`normalize_choice` for more info on the mapping of strings\n    to choices. See :ref:`choice-opts` for an example.\n\n    :param case_sensitive: Set to false to make choices case\n        insensitive. Defaults to true.\n\n    .. versionchanged:: 8.2.0\n        Non-``str`` ``choices`` are now supported. It can additionally be any\n        iterable. Before you were not recommended to pass anything but a list or\n        tuple.\n\n    .. versionadded:: 8.2.0\n        Choice normalization can be overridden via :meth:`normalize_choice`.\n    \"\"\"\n\n    name = \"choice\"\n\n    def __init__(\n        self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True\n    ) -> None:\n        self.choices: cabc.Sequence[ParamTypeValue] = tuple(choices)\n        self.case_sensitive = case_sensitive\n\n    def to_info_dict(self) -> dict[str, t.Any]:\n        info_dict = super().to_info_dict()\n        info_dict[\"choices\"] = self.choices\n        info_dict[\"case_sensitive\"] = self.case_sensitive\n        return info_dict\n\n    def _normalized_mapping(\n        self, ctx: Context | None = None\n    ) -> cabc.Mapping[ParamTypeValue, str]:\n        \"\"\"\n        Returns mapping where keys are the original choices and the values are\n        the normalized values that are accepted via the comm",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "\"\"\"\nThis module started out as largely a copy paste from the stdlib's\noptparse module with the features removed that we do not need from\noptparse because we implement them in Click on a higher level (for\ninstance type handling, help formatting and a lot more).\n\nThe plan is to remove more and more from here over time.\n\nThe reason this is a different module and not optparse from the stdlib\nis that there are differences in 2.x and 3.x about the error messages\ngenerated and optparse in the stdlib uses gettext for no good reason\nand might cause us issues.\n\nClick uses parts of optparse written by Gregory P. Ward and maintained\nby the Python Software Foundation. This is limited to code in parser.py.\n\nCopyright 2001-2006 Gregory P. Ward. All rights reserved.\nCopyright 2002-2006 Python Software Foundation. All rights reserved.\n\"\"\"\n\n# This code uses parts of optparse written by Gregory P. Ward and\n# maintained by the Python Software Foundation.\n# Copyright 2001-2006 Gregory P. Ward\n# Copyright 2002-2006 Python Software Foundation\nfrom __future__ import annotations\n\nimport collections.abc as cabc\nimport typing as t\nfrom collections import deque\nfrom gettext import gettext as _\nfrom gettext import ngettext\n\nfrom ._utils import FLAG_NEEDS_VALUE\nfrom ._utils import UNSET\nfrom .exceptions import BadArgumentUsage\nfrom .exceptions import BadOptionUsage\nfrom .exceptions import NoSuchOption\nfrom .exceptions import UsageError\n\nif t.TYPE_CHECKING:\n    from ._utils import T_FLAG_NEEDS_VALUE\n    from ._utils import T_UNSET\n    from .core import Argument as CoreArgument\n    from .core import Context\n    from .core import Option as CoreOption\n    from .core import Parameter as CoreParameter\n\nV = t.TypeVar(\"V\")\n\n\ndef _unpack_args(\n    args: cabc.Sequence[str], nargs_spec: cabc.Sequence[int]\n) -> tuple[cabc.Sequence[str | cabc.Sequence[str | None] | None], list[str]]:\n    \"\"\"Given an iterable of arguments and an iterable of nargs specifications,\n    it returns a tuple with all the unpacked ar",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "`Choice.normalize_choice` currently returns only the raw choice string, which looks suspicious given the docstring says it should also honor `Context.token_normalize_func` and case-folding. I’m checking whether that missing normalization is the regression and whether anything else depends on the old shape of the returned value.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"rg -n \\\"normalize_choice\\\\(|_normalized_mapping\\\\(|get_invalid_choice_message\\\\(|case_sensitive\\\" src/click -S\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '360,470p' src/click/types.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "        return ngettext(\n            \"{value!r} is not {choice}.\",\n            \"{value!r} is not one of {choices}.\",\n            len(self.choices),\n        ).format(value=value, choice=choices_str, choices=choices_str)\n\n    def __repr__(self) -> str:\n        return f\"Choice({list(self.choices)})\"\n\n    def shell_complete(\n        self, ctx: Context, param: Parameter, incomplete: str\n    ) -> list[CompletionItem]:\n        \"\"\"Complete choices that start with the incomplete value.\n\n        :param ctx: Invocation context for this command.\n        :param param: The parameter that is requesting completion.\n        :param incomplete: Value being completed. May be empty.\n\n        .. versionadded:: 8.0\n        \"\"\"\n        from click.shell_completion import CompletionItem\n\n        str_choices = map(str, self.choices)\n\n        if self.case_sensitive:\n            matched = (c for c in str_choices if c.startswith(incomplete))\n        else:\n            incomplete = incomplete.lower()\n            matched = (c for c in str_choices if c.lower().startswith(incomplete))\n\n        return [CompletionItem(c) for c in matched]\n\n\nclass DateTime(ParamType):\n    \"\"\"The DateTime type converts date strings into `datetime` objects.\n\n    The format strings which are checked are configurable, but default to some\n    common (non-timezone aware) ISO 8601 formats.\n\n    When specifying *DateTime* formats, you should only pass a list or a tuple.\n    Other iterables, like generators, may lead to surprising results.\n\n    The format strings are processed using ``datetime.strptime``, and this\n    consequently defines the format strings which are allowed.\n\n    Parsing is tried using each format, in order, and the first format which\n    parses successfully is used.\n\n    :param formats: A list or tuple of date format strings, in the order in\n                    which they should be tried. Defaults to\n                    ``'%Y-%m-%d'``, ``'%Y-%m-%dT%H:%M:%S'``,\n                    ``'%Y-%m-%d %H:%M:%S'``.\n    \"",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "src/click/types.py:244:    :param case_sensitive: Set to false to make choices case\nsrc/click/types.py:259:        self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True\nsrc/click/types.py:262:        self.case_sensitive = case_sensitive\nsrc/click/types.py:267:        info_dict[\"case_sensitive\"] = self.case_sensitive\nsrc/click/types.py:270:    def _normalized_mapping(\nsrc/click/types.py:281:            choice: self.normalize_choice(\nsrc/click/types.py:288:    def normalize_choice(self, choice: ParamTypeValue, ctx: Context | None) -> str:\nsrc/click/types.py:308:                [str(i) for i in self._normalized_mapping(ctx=ctx).values()]\nsrc/click/types.py:325:            choices=\",\\n\\t\".join(self._normalized_mapping(ctx=ctx).values())\nsrc/click/types.py:336:        normed_value = self.normalize_choice(choice=value, ctx=ctx)\nsrc/click/types.py:337:        normalized_mapping = self._normalized_mapping(ctx=ctx)\nsrc/click/types.py:347:                self.get_invalid_choice_message(value=value, ctx=ctx),\nsrc/click/types.py:352:    def get_invalid_choice_message(self, value: t.Any, ctx: Context | None) -> str:\nsrc/click/types.py:359:        choices_str = \", \".join(map(repr, self._normalized_mapping(ctx=ctx).values()))\nsrc/click/types.py:384:        if self.case_sensitive:\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc 'rg -n \"ParamTypeValue\" -n src/click/types.py src/click/core.py'",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '1,220p' src/click/types.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "from __future__ import annotations\n\nimport collections.abc as cabc\nimport enum\nimport os\nimport stat\nimport sys\nimport typing as t\nfrom datetime import datetime\nfrom gettext import gettext as _\nfrom gettext import ngettext\n\nfrom ._compat import _get_argv_encoding\nfrom ._compat import open_stream\nfrom .exceptions import BadParameter\nfrom .utils import format_filename\nfrom .utils import LazyFile\nfrom .utils import safecall\n\nif t.TYPE_CHECKING:\n    import typing_extensions as te\n\n    from .core import Context\n    from .core import Parameter\n    from .shell_completion import CompletionItem\n\nParamTypeValue = t.TypeVar(\"ParamTypeValue\")\n\n\nclass ParamType:\n    \"\"\"Represents the type of a parameter. Validates and converts values\n    from the command line or Python into the correct type.\n\n    To implement a custom type, subclass and implement at least the\n    following:\n\n    -   The :attr:`name` class attribute must be set.\n    -   Calling an instance of the type with ``None`` must return\n        ``None``. This is already implemented by default.\n    -   :meth:`convert` must convert string values to the correct type.\n    -   :meth:`convert` must accept values that are already the correct\n        type.\n    -   It must be able to convert a value if the ``ctx`` and ``param``\n        arguments are ``None``. This can occur when converting prompt\n        input.\n    \"\"\"\n\n    is_composite: t.ClassVar[bool] = False\n    arity: t.ClassVar[int] = 1\n\n    #: the descriptive name of this type\n    name: str\n\n    #: if a list of this type is expected and the value is pulled from a\n    #: string environment variable, this is what splits it up.  `None`\n    #: means any whitespace.  For all parameters the general rule is that\n    #: whitespace splits them up.  The exception are paths and files which\n    #: are split by ``os.path.pathsep`` by default (\":\" on Unix and \";\" on\n    #: Windows).\n    envvar_list_splitter: t.ClassVar[str | None] = None\n\n    def to_info_dict(self) -> dict[str, t.Any]:\n  ",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "src/click/types.py:27:ParamTypeValue = t.TypeVar(\"ParamTypeValue\")\nsrc/click/types.py:233:class Choice(ParamType, t.Generic[ParamTypeValue]):\nsrc/click/types.py:259:        self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True\nsrc/click/types.py:261:        self.choices: cabc.Sequence[ParamTypeValue] = tuple(choices)\nsrc/click/types.py:272:    ) -> cabc.Mapping[ParamTypeValue, str]:\nsrc/click/types.py:288:    def normalize_choice(self, choice: ParamTypeValue, ctx: Context | None) -> str:\nsrc/click/types.py:330:    ) -> ParamTypeValue:\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"rg -n \\\"Choice\\\\(|case_sensitive=False|normalize_choice|token_normalize_func\\\" tests -S\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc \"sed -n '1800,1885p' tests/test_options.py\"",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "        ([\"foo\", \"bar\"], \"random\", \"random\"),\n        # None cannot be a default value as-is: it left the default value as unset.\n        ([\"foo\", \"bar\"], None, None),\n        ([0, 1], 0, \"0\"),\n        # Values are not coerced to the type of the choice, even if equivalent.\n        ([0, 1], 0.0, \"0.0\"),\n        ([1, 2], 2, \"2\"),\n        ([1.0, 2.0], 2, \"2\"),\n        ([1.0, 2.0], 2.0, \"2.0\"),\n        ([True, False], True, \"True\"),\n        ([True, False], False, \"False\"),\n        ([\"foo\", 1], \"foo\", \"foo\"),\n        ([\"foo\", 1], 1, \"1\"),\n        # Enum choices are rendered as their names, not values.\n        # See: https://github.com/pallets/click/issues/2911\n        (HashType, HashType.SHA1, \"SHA1\"),\n        # Enum choices allow defaults strings that are their names.\n        (HashType, HashType.SHA256, \"SHA256\"),\n        (HashType, \"SHA256\", \"SHA256\"),\n        (Number, Number.TWO, \"TWO\"),\n        (Number, \"TWO\", \"TWO\"),\n        (Letter, Letter.NAME_1, \"NAME_1\"),\n        (Letter, Letter.NAME_2, \"NAME_2\"),\n        (Letter, Letter.NAME_3, \"NAME_3\"),\n        (Letter, \"NAME_1\", \"NAME_1\"),\n        (Letter, \"NAME_2\", \"NAME_2\"),\n        (Letter, \"NAME_3\", \"NAME_3\"),\n        (Color, Color.GREEN, \"GREEN\"),\n        (Color, \"GREEN\", \"GREEN\"),\n        (ColorInt, ColorInt.GREEN, \"GREEN\"),\n        (ColorInt, \"GREEN\", \"GREEN\"),\n    ],\n)\ndef test_choice_default_rendering(runner, choices, default, default_string):\n    @click.command()\n    @click.option(\"-g\", type=click.Choice(choices), default=default, show_default=True)\n    def cli_with_choices(g):\n        pass\n\n    # Check that the default value is kept normalized to the type of the choice.\n    assert cli_with_choices.params[0].default == default\n\n    result = runner.invoke(cli_with_choices, [\"--help\"])\n    extra_usage = f\"[default: {default_string}]\"\n    if default_string is None:\n        assert extra_usage not in result.output\n    else:\n        assert extra_usage in result.output\n\n\n@pytest.mark.parametrize(\n    \"opts_one,opts_two\",\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "tests/test_shell_completion.py:115:            Argument([\"c1\"], type=Choice([\"a1\", \"a2\", \"b\"])),\ntests/test_shell_completion.py:116:            Argument([\"c2\"], type=Choice([\"c1\", \"c2\", \"d\"])),\ntests/test_shell_completion.py:132:            Argument([\"a\"], type=Choice([\"a\"]), default=\"a\"),\ntests/test_shell_completion.py:133:            Argument([\"b\"], type=Choice([\"b\"]), default=\"b\"),\ntests/test_shell_completion.py:143:    cli = Command(\"cli\", params=[Option([\"-c\"], type=Choice([\"a1\", \"a2\", \"b\"]))])\ntests/test_shell_completion.py:150:    cli = Command(\"cli\", params=[Option([\"-c\"], type=Choice([\"!1\", \"!2\", \"+3\"]))])\ntests/test_shell_completion.py:160:            Option([\"-c\"], type=Choice([\"!1\", \"!2\", \"+3\"])),\ntests/test_shell_completion.py:215:            Argument([\"a\"], type=Choice([\"a1\", \"a2\", \"b\"])),\ntests/test_shell_completion.py:228:            Argument([\"a\"], type=Choice([\"a1\", \"a2\", \"b\"])),\ntests/test_shell_completion.py:230:            Option([\"-c\"], type=Choice([\"p\", \"q\"]), nargs=2),\ntests/test_shell_completion.py:255:        params=[Option([\"-m\"], type=Choice([\"a\", \"b\"]), multiple=True), Option([\"-f\"])],\ntests/test_shell_completion.py:265:    cli = Command(\"cli\", params=[Option([\"-c\"], type=Choice([\"a\", \"b\"]), nargs=2)])\ntests/test_shell_completion.py:275:            Argument([\"x\"], type=Choice([\"a\", \"b\"]), nargs=2),\ntests/test_shell_completion.py:276:            Argument([\"y\"], type=Choice([\"c\", \"d\"]), nargs=-1),\ntests/test_shell_completion.py:295:            Argument([\"name\"], type=Choice([\"name\", \"--\", \"-o\", \"--opt\"])),\ntests/test_shell_completion.py:314:                    Option([\"-b\"], type=Choice([\"a\", \"b\"]), hidden=True),\ntests/test_shell_completion.py:464:        params=[Option([\"-a\"], type=Choice([\"Au\", \"al\", \"Bc\"], case_sensitive=value))],\ntests/test_types.py:255:    choice = click.Choice([\"a\", \"b\", \"c\"])\ntests/test_termui.py:216:        \"-g\", type=click.Choice([\"none\", \"day\", \"week\", \"month\"]), prompt=True\ntests/test_termui.py:224:        type=",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "I’ve isolated the regression to `Choice.normalize_choice()`. I’m applying the smallest source-only fix there so both parsing and the help/error rendering paths recover the intended normalization behavior.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "[{\"kind\": \"update\", \"path\": \"<local-path>/src/click/types.py\"}]",
+      "tool": "apply_patch"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "completed",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "The code change is in place. I’m running the focused regression first, then the broader normalization/parser sweep to confirm there isn’t a knock-on break.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc 'PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_normalization.py::test_choice_normalization'",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_use",
+      "text": "/bin/bash -lc 'PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_normalization.py tests/test_parser.py'",
+      "tool": "shell"
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": ".                                                                        [100%]\n1 passed in 0.16s\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "tool_result",
+      "text": "..........                                                               [100%]\n10 passed in 0.25s\n",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "The test jobs are still running. I’m polling both so I can report the exact pass/fail state rather than guessing from partial output.",
+      "tool": ""
+    },
+    {
+      "is_error": false,
+      "kind": "assistant",
+      "text": "Restored `Choice` normalization in [src/click/types.py](<local-path>/src/click/types.py) by applying `Context.token_normalize_func` and `casefold()` inside `Choice.normalize_choice()`. This fixes click choice value matching, help text, and invalid-value reporting without touching tests or other files.\n\nChecks run:\n- `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_normalization.py::test_choice_normalization`  \n  - pass\n- `PYTHONPATH=src .venv/bin/python -m pytest -q tests/test_normalization.py tests/test_parser.py`  \n  - pass",
+      "tool": ""
+    }
+  ],
+  "goal": "Click choice values are no longer normalized according to the context and case-sensitivity settings. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+  "model": null,
+  "requested_model": "gpt-5.4-mini",
+  "returned_model": null,
+  "schema_version": 1,
+  "source": "codex",
+  "successful_terminal": true,
+  "truncated": false,
+  "turn_count": 1,
+  "usage": {
+    "cache_write_tokens": 0,
+    "cached_tokens": 243072,
+    "fresh_input_tokens": 34397,
+    "input_tokens": 277469,
+    "output_tokens": 2686,
+    "reasoning_tokens": null,
+    "total_tokens": null
+  }
+}

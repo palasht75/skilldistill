@@ -4,26 +4,30 @@ Guidance for AI coding agents (Codex, Claude Code, Cursor, etc.) working in this
 
 ## What this project is
 
-`skilldistill` mines AI-agent session transcripts (Claude Code JSONL) for
-successful workflows and distills them into SKILL.md playbooks. Pipeline:
-parse transcripts → score success heuristically → distill via LLM (or offline
-outline) → dedup against existing skills → write draft for human review.
+`skilldistill` mines selected AI-agent trajectories (Claude Code JSONL,
+Cursor CLI stream-JSON, and exported Cursor Markdown) for reusable workflow
+evidence and distills it into reviewable SKILL.md candidates. Pipeline:
+parse transcripts → score evidence heuristically → extract trajectory-local
+lessons → synthesize or revise a candidate → compare/consolidate overlap →
+write a draft for human review.
 
 ## Layout
 
-- `src/skilldistill/transcripts.py` — tolerant JSONL parser → `Session`/`Event`
+- `src/skilldistill/transcripts.py` — tolerant agent adapters → `Session`/`Event`
 - `src/skilldistill/detect.py` — success scoring with human-readable reasons
-- `src/skilldistill/distill.py` — LLM prompt + offline fallback → `SkillDraft`
+- `src/skilldistill/distill.py` — single/multi-trace synthesis → `SkillDraft`
+- `src/skilldistill/consolidate.py` — non-destructive existing-skill proposals
+- `src/skilldistill/redact.py` — offline credential redaction before egress
 - `src/skilldistill/llm.py` — optional Anthropic/OpenAI resolver (env-key gated)
-- `src/skilldistill/emitter.py` — write `skills/<name>/SKILL.md`
-- `src/skilldistill/dedup.py` — similarity warnings vs existing skills
-- `src/skilldistill/cli.py` — `scan` and `distill` subcommands
+- `src/skilldistill/emitter.py` — atomic, contained draft writes
+- `src/skilldistill/dedup.py` — candidate comparison and overlap discovery
+- `src/skilldistill/cli.py` — `scan`, `overlaps`, `distill`, and `consolidate`
 - `tests/` — pytest; `conftest.py` builds synthetic session fixtures
 
 ## Commands
 
 ```bash
-pip install -e .[dev]          # setup (installs dunnit too)
+pip install -e ".[dev]"        # setup (installs dunnit too)
 python -m pytest -q            # tests
 python -m ruff check src tests # lint
 dunnit verify                  # definition of done for this repo

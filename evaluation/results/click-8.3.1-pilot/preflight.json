@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "study_sha256": "4760bdb55e6e7e88fb462555298121a797ac70f5e0bcd8258af91daa3f2fe38c",
+  "tasks": [
+    {
+      "clean_literal_exposed_in_history": false,
+      "focused_returncode": 1,
+      "focused_timed_out": false,
+      "seeded_failure_confirmed": true,
+      "task_id": "option-name-normalization"
+    },
+    {
+      "clean_literal_exposed_in_history": false,
+      "focused_returncode": 1,
+      "focused_timed_out": false,
+      "seeded_failure_confirmed": true,
+      "task_id": "choice-value-normalization"
+    },
+    {
+      "clean_literal_exposed_in_history": false,
+      "focused_returncode": 1,
+      "focused_timed_out": false,
+      "seeded_failure_confirmed": true,
+      "task_id": "command-name-normalization"
+    },
+    {
+      "clean_literal_exposed_in_history": false,
+      "focused_returncode": 1,
+      "focused_timed_out": false,
+      "seeded_failure_confirmed": true,
+      "task_id": "nested-context-normalization"
+    },
+    {
+      "clean_literal_exposed_in_history": false,
+      "focused_returncode": 1,
+      "focused_timed_out": false,
+      "seeded_failure_confirmed": true,
+      "task_id": "shell-token-splitting"
+    }
+  ]
+}

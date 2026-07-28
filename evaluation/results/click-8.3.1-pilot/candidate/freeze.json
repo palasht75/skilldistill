@@ -1,0 +1,7 @@
+{
+  "candidate_sha256": "2ff87394f9ec91a4d15f56d1b4c21a4601eec33d5768bd6df1f7cd1af5fb412e",
+  "frozen_before_holdouts": true,
+  "model": "gpt-5.4-mini",
+  "provider": "codex-chatgpt-fallback",
+  "schema_version": 1
+}

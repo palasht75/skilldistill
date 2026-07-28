@@ -1,0 +1,28 @@
+{
+  "accepted": {
+    "choice-value-normalization": "sources/choice-value-normalization/1/normalized-trace.json",
+    "command-name-normalization": "sources/command-name-normalization/1/normalized-trace.json",
+    "option-name-normalization": "sources/option-name-normalization/1/normalized-trace.json"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "task_id": "option-name-normalization",
+      "trace_eligible": true,
+      "verified_success": true
+    },
+    {
+      "attempt": 1,
+      "task_id": "choice-value-normalization",
+      "trace_eligible": true,
+      "verified_success": true
+    },
+    {
+      "attempt": 1,
+      "task_id": "command-name-normalization",
+      "trace_eligible": true,
+      "verified_success": true
+    }
+  ],
+  "status": "passed"
+}

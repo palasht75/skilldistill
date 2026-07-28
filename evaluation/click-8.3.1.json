@@ -1,0 +1,111 @@
+{
+  "study_id": "click-8.3.1-token-normalization-pilot",
+  "repository": {
+    "url": "https://github.com/pallets/click.git",
+    "commit": "1d038f270701498433cb432f54db89f95f07a845",
+    "version": "8.3.1"
+  },
+  "runtime": {
+    "python": "3.12",
+    "pytest": "8.4.2",
+    "agent_model": "gpt-5.4-mini",
+    "distillation_model": "gpt-5.4-mini",
+    "reasoning_effort": "medium",
+    "timeout_seconds": 420,
+    "schedule_seed": 20260728,
+    "holdout_repetitions": 3,
+    "source_max_attempts": 2
+  },
+  "tasks": [
+    {
+      "id": "option-name-normalization",
+      "role": "source",
+      "path": "src/click/parser.py",
+      "old": "    prefix, opt = _split_opt(opt)\n    return f\"{prefix}{ctx.token_normalize_func(opt)}\"\n",
+      "new": "    prefix, opt = _split_opt(opt)\n    return f\"{prefix}{opt}\"\n",
+      "prompt": "Click option names are no longer processed by the configured token normalization function. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+      "focused_verifier": [
+        "tests/test_normalization.py::test_option_normalization"
+      ],
+      "shared_verifier": [
+        "tests/test_normalization.py",
+        "tests/test_parser.py"
+      ],
+      "allowed_changes": [
+        "src/click/parser.py"
+      ]
+    },
+    {
+      "id": "choice-value-normalization",
+      "role": "source",
+      "path": "src/click/types.py",
+      "old": "        normed_value = choice.name if isinstance(choice, enum.Enum) else str(choice)\n\n        if ctx is not None and ctx.token_normalize_func is not None:\n            normed_value = ctx.token_normalize_func(normed_value)\n\n        if not self.case_sensitive:\n            normed_value = normed_value.casefold()\n\n        return normed_value\n",
+      "new": "        return choice.name if isinstance(choice, enum.Enum) else str(choice)\n",
+      "prompt": "Click choice values are no longer normalized according to the context and case-sensitivity settings. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+      "focused_verifier": [
+        "tests/test_normalization.py::test_choice_normalization"
+      ],
+      "shared_verifier": [
+        "tests/test_normalization.py",
+        "tests/test_parser.py"
+      ],
+      "allowed_changes": [
+        "src/click/types.py"
+      ]
+    },
+    {
+      "id": "command-name-normalization",
+      "role": "source",
+      "path": "src/click/core.py",
+      "old": "        if cmd is None and ctx.token_normalize_func is not None:\n            cmd_name = ctx.token_normalize_func(cmd_name)\n            cmd = self.get_command(ctx, cmd_name)\n",
+      "new": "        if cmd is None and ctx.token_normalize_func is not None:\n            cmd_name = original_cmd_name\n            cmd = self.get_command(ctx, cmd_name)\n",
+      "prompt": "Click command names are no longer processed by the configured token normalization function during command resolution. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+      "focused_verifier": [
+        "tests/test_normalization.py::test_command_normalization"
+      ],
+      "shared_verifier": [
+        "tests/test_normalization.py",
+        "tests/test_parser.py"
+      ],
+      "allowed_changes": [
+        "src/click/core.py"
+      ]
+    },
+    {
+      "id": "nested-context-normalization",
+      "role": "positive_holdout",
+      "path": "src/click/core.py",
+      "old": "        if token_normalize_func is None and parent is not None:\n            token_normalize_func = parent.token_normalize_func\n",
+      "new": "        if token_normalize_func is None and parent is not None:\n            token_normalize_func = None\n",
+      "prompt": "A token normalization function configured on a Click group is no longer inherited by nested command contexts. Restore inheritance with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+      "focused_verifier": [
+        "__heldout_nested_context__"
+      ],
+      "shared_verifier": [
+        "tests/test_normalization.py",
+        "tests/test_parser.py"
+      ],
+      "allowed_changes": [
+        "src/click/core.py"
+      ]
+    },
+    {
+      "id": "shell-token-splitting",
+      "role": "negative_control",
+      "path": "src/click/shell_completion.py",
+      "old": "            out.append(token)\n",
+      "new": "            out.append(string)\n",
+      "prompt": "Click shell-completion argument splitting no longer preserves the expected token boundaries. Restore the intended behavior with a minimal production-code change. Do not modify tests, configuration, documentation, or generated files.",
+      "focused_verifier": [
+        "tests/test_parser.py::test_split_arg_string"
+      ],
+      "shared_verifier": [
+        "tests/test_parser.py",
+        "tests/test_shell_completion.py"
+      ],
+      "allowed_changes": [
+        "src/click/shell_completion.py"
+      ]
+    }
+  ]
+}

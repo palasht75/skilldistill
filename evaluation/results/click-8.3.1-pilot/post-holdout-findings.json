@@ -1,0 +1,23 @@
+{
+  "candidate_regenerated": false,
+  "candidate_sha256": "2ff87394f9ec91a4d15f56d1b4c21a4601eec33d5768bd6df1f7cd1af5fb412e",
+  "findings": [
+    {
+      "id": "candidate-trigger-scope-too-broad",
+      "impact": "The negative-control pass counts remain valid execution outcomes, but they do not establish that automatic trigger selection would correctly avoid the unrelated task.",
+      "next_protocol": "Use a semantic trigger-scope gate and a new candidate, seed, task split, and holdouts. Do not tune against or reuse this holdout set.",
+      "severity": "protocol-limitation",
+      "summary": "The frozen candidate describes any localized behavior regression, rather than limiting its trigger to normalization behavior."
+    },
+    {
+      "id": "holdout-binding-metadata-backfilled",
+      "impact": "The hashes were backfilled from the candidate and schedule that were already frozen before execution; patches, verifier outcomes, usage, and timing were not changed.",
+      "next_protocol": "The harness now writes these bindings with each run, validates them before resume or aggregation, and refuses candidate regeneration in a used artifact root.",
+      "severity": "metadata-correction",
+      "summary": "The initial holdout records omitted per-run candidate, schedule, and study hash bindings."
+    }
+  ],
+  "recorded_after_holdouts": true,
+  "schema_version": 1,
+  "study_id": "click-8.3.1-token-normalization-pilot"
+}

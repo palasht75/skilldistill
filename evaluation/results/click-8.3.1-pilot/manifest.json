@@ -1,0 +1,24 @@
+{
+  "codex_version": "codex-cli 0.146.0-alpha.3.1",
+  "python_version": "3.12.3",
+  "raw_artifacts_publishable": false,
+  "repository": {
+    "commit": "1d038f270701498433cb432f54db89f95f07a845",
+    "url": "https://github.com/pallets/click.git",
+    "version": "8.3.1"
+  },
+  "runtime": {
+    "agent_model": "gpt-5.4-mini",
+    "distillation_model": "gpt-5.4-mini",
+    "holdout_repetitions": 3,
+    "pytest": "8.4.2",
+    "python": "3.12",
+    "reasoning_effort": "medium",
+    "schedule_seed": 20260728,
+    "source_max_attempts": 2,
+    "timeout_seconds": 420
+  },
+  "schema_version": 1,
+  "study_id": "click-8.3.1-token-normalization-pilot",
+  "study_manifest_sha256": "4760bdb55e6e7e88fb462555298121a797ac70f5e0bcd8258af91daa3f2fe38c"
+}
